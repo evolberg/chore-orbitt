@@ -175,7 +175,7 @@ export default function OrbitalChoreScheduler() {
                   borderColor: isActive ? "#ffffff" : color,
                   color: isActive ? "#ffffff" : color,
                   backgroundColor: isActive ? `${color}55` : `${color}22`,
-                  boxShadow: isActive ? `0 0 18px ${color}` : `0 0 6px ${color}33`,
+
                   transform: isActive ? "translate(-50%, -50%) scale(1.15)" : "translate(-50%, -50%) scale(1)",
                   zIndex: isActive ? 10 : 1,
                 }}
