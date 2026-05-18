@@ -1,20 +1,41 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
 export default function OrbitalChoreScheduler() {
-  const peopleMap = { 1:"Sara",2:"Nina",3:"Kirsten",4:"Colton",5:"Jack",6:"Ethan",7:"Kaya" };
+  const peopleMap = {
+    1: "Sara",
+    2: "Nina",
+    3: "Kirsten",
+    4: "Colton",
+    5: "Jack",
+    6: "Ethan",
+    7: "Kaya",
+  };
+
   const wheels = [
-    { name:"Everyone", people:["1","2","3","4","5","6","7"], chores:["a","b"] },
-    { name:"Main and Upstairs", people:["1","2","3","4","5"], chores:["c","d"] },
-    { name:"Upstairs", people:["1","2","3"], chores:["e","f"] },
-    { name:"Main and Downstairs", people:["4","5","6","7"], chores:["g"] },
+    { name: "Everyone", people: ["1","2","3","4","5","6","7"], chores: ["a","b"] },
+    { name: "Main and Upstairs", people: ["1","2","3","4","5"], chores: ["c","d"] },
+    { name: "Upstairs", people: ["1","2","3"], chores: ["e","f"] },
+    { name: "Main and Downstairs", people: ["4","5","6","7"], chores: ["g"] },
   ];
-  const choresMap = { a:"Living Room + Dining Room", b:"Stoop + Stairs", c:"Recycling + Porch", d:"Kitchen", e:"Upstairs Bathroom", f:"Laundry + Landing", g:"Mainfloor Bathroom" };
-  const choreColor = { a:"#3b82f6", b:"#22c55e", c:"#3b82f6", d:"#22c55e", e:"#3b82f6", f:"#22c55e", g:"#3b82f6" };
+
+  const choresMap = {
+    a: "Living Room + Dining Room",
+    b: "Stoop + Stairs",
+    c: "Recycling + Porch",
+    d: "Kitchen",
+    e: "Upstairs Bathroom",
+    f: "Laundry + Landing",
+    g: "Mainfloor Bathroom",
+  };
+
+  const choreColor = {
+    a: "#3b82f6", b: "#22c55e", c: "#3b82f6", d: "#22c55e",
+    e: "#3b82f6", f: "#22c55e", g: "#3b82f6",
+  };
 
   const [weekOffset, setWeekOffset] = useState(0);
-  const [renderWeek, setRenderWeek] = useState(null);
 
-  const MS_PER_WEEK = 1000*60*60*24*7;
+  const MS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
   function firstMondayOfYear(year) {
     const jan1 = new Date(year, 0, 1);
@@ -28,14 +49,9 @@ export default function OrbitalChoreScheduler() {
   const currentWeek = Math.floor((now - GLOBAL_ANCHOR) / MS_PER_WEEK);
   const baseWeek = currentWeek + weekOffset;
 
-  useEffect(() => {
-    requestAnimationFrame(() => setRenderWeek(baseWeek));
-  }, [baseWeek]);
-
-  const displayWeek = renderWeek !== null ? renderWeek : baseWeek;
-
   const baseStartDate = new Date(GLOBAL_ANCHOR.getTime() + baseWeek * MS_PER_WEEK);
-  const baseEndDate = new Date(baseStartDate.getTime() + 6*24*60*60*1000);
+  const baseEndDate = new Date(baseStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+
   const displayYear = baseStartDate.getFullYear();
   const yearAnchor = firstMondayOfYear(displayYear);
   const weekOfYear = Math.floor((baseStartDate - yearAnchor) / MS_PER_WEEK) + 1;
@@ -43,8 +59,12 @@ export default function OrbitalChoreScheduler() {
   const weeksInYear = Math.floor((lastDayOfYear - yearAnchor) / MS_PER_WEEK) + 1;
   const totalWeeksInYear = weeksInYear >= 53 ? 53 : 52;
 
-  function formatDate(d) { return d.toLocaleDateString("en-US",{month:"short",day:"numeric"}); }
+  function formatDate(d) {
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
   const calendarLabel = `Week ${weekOfYear}/${totalWeeksInYear} \u2022 ${formatDate(baseStartDate)} \u2013 ${formatDate(baseEndDate)} \u2022 ${displayYear}`;
+
   const allPeople = Object.keys(peopleMap);
 
   function generateWheelAssignments(wheel, week) {
@@ -76,22 +96,25 @@ export default function OrbitalChoreScheduler() {
   function pickDeterministic(arr, key) {
     if (!arr.length) return null;
     let h = 0;
-    for (let i = 0; i < key.length; i++) h = (h*31 + key.charCodeAt(i)) >>> 0;
+    for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
     return arr[h % arr.length];
   }
 
   function ensureRecycling(displayMap, fullAssignments) {
-    if (Object.values(displayMap).includes("c")) return displayMap;
+    const recyclingChore = "c";
+    const alreadyAssigned = Object.values(displayMap).includes(recyclingChore);
+    if (alreadyAssigned) return displayMap;
     let candidate = null;
     for (const [person, chores] of Object.entries(fullAssignments)) {
-      if (chores.includes("c")) { candidate = person; break; }
+      if (chores.includes(recyclingChore)) { candidate = person; break; }
     }
     if (!candidate) candidate = Object.keys(displayMap)[0];
-    displayMap[candidate] = "c";
+    displayMap[candidate] = recyclingChore;
     return displayMap;
   }
 
-  const upstairsChores = ["e","f"];
+  const upstairsChores = ["e", "f"];
+
   function buildDisplay(assignments, week) {
     let display = {};
     for (const id of allPeople) {
@@ -100,7 +123,8 @@ export default function OrbitalChoreScheduler() {
       const pool = preferred.length ? preferred : list;
       display[id] = pickDeterministic(pool, `${id}-${week}`);
     }
-    return ensureRecycling(display, assignments);
+    display = ensureRecycling(display, assignments);
+    return display;
   }
 
   const currentAssignments = generateAllAssignments(baseWeek);
@@ -115,45 +139,42 @@ export default function OrbitalChoreScheduler() {
         {allPeople.map(id => (
           <div key={id} className="flex justify-between py-1 text-sm">
             <span>{peopleMap[id]}</span>
-            <span className="text-zinc-400">{display[id] ? choresMap[display[id]] : "\u2014"}</span>
+            <span className="text-zinc-400">
+              {display[id] ? choresMap[display[id]] : "\u2014"}
+            </span>
           </div>
         ))}
       </div>
     );
   }
 
-  function OrbitalWheel({ wheel, displayWeek, size }) {
-    const radius = size/2 - 40;
-    const center = size/2;
+  function OrbitalWheel({ wheel, weekOffset, size }) {
+    const radius = size / 2 - 40;
+    const center = size / 2;
     const activePeople = wheel.people;
-    const n = activePeople.length;
-    const assignments = generateWheelAssignments(wheel, displayWeek);
-    const rotationOffset = ((displayWeek % n) + n) % n;
+    const assignments = generateWheelAssignments(wheel, weekOffset);
+    const activeIndex = ((weekOffset % activePeople.length) + activePeople.length) % activePeople.length;
 
     return (
       <div className="flex flex-col items-center">
         <div className="relative rounded-full border border-zinc-700 bg-zinc-900/50" style={{ width: size, height: size }}>
           {activePeople.map((person, index) => {
-            const slotIndex = (index - rotationOffset + n) % n;
-            const angle = (slotIndex / n) * 2 * Math.PI - Math.PI / 2;
+            const angle = (index / activePeople.length) * 2 * Math.PI;
             const x = center + Math.cos(angle) * radius;
             const y = center + Math.sin(angle) * radius;
             const personChores = assignments[person] || [];
             const primary = personChores[0];
             const color = primary ? choreColor[primary] : "#525252";
-
             return (
               <div
                 key={person}
-                className="absolute flex h-10 w-10 items-center justify-center rounded-full border text-xs"
+                className="absolute flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs"
                 style={{
-                  left: x,
-                  top: y,
-                  transform: "translate(-50%, -50%)",
+                  left: x, top: y,
                   borderColor: color,
                   color: color,
                   backgroundColor: `${color}22`,
-                  transition: "left 0.5s cubic-bezier(0.4,0,0.2,1), top 0.5s cubic-bezier(0.4,0,0.2,1)",
+                  transform: "translate(-50%, -50%)",
                 }}
               >
                 {peopleMap[person]}
@@ -162,12 +183,9 @@ export default function OrbitalChoreScheduler() {
           })}
         </div>
         <div className="mt-2 text-xs text-zinc-400 text-center">
-          {wheel.chores.map((c, i) => (
-            <span key={c}>
-              {i > 0 && <span className="mx-1 text-zinc-500">&bull;</span>}
-              <span style={{ color: choreColor[c] }}>{choresMap[c]}</span>
-            </span>
-          ))}
+          {wheel.chores.map(c => (
+            <span key={c} style={{ color: choreColor[c] }}>{choresMap[c]}</span>
+          )).reduce((acc, el, i) => i === 0 ? [el] : [...acc, <span key={i} className="mx-1 text-zinc-500">&bull;</span>, el], [])}
         </div>
       </div>
     );
@@ -180,9 +198,9 @@ export default function OrbitalChoreScheduler() {
         <div className="mt-2 text-sm text-cyan-300">{calendarLabel}</div>
       </div>
       <div className="mb-4 flex justify-center gap-4">
-        <button onClick={() => setWeekOffset(v => v-1)} className="border px-3 py-1">&#9664;</button>
+        <button onClick={() => setWeekOffset(v => v - 1)} className="border px-3 py-1">&#9664;</button>
         <button onClick={() => setWeekOffset(0)} className="border px-3 py-1 text-cyan-300">This week</button>
-        <button onClick={() => setWeekOffset(v => v+1)} className="border px-3 py-1">&#9654;</button>
+        <button onClick={() => setWeekOffset(v => v + 1)} className="border px-3 py-1">&#9654;</button>
       </div>
       <div className="grid gap-4 md:grid-cols-2 mb-6">
         <AssignmentCard title="This Week" display={currentDisplay} />
@@ -190,7 +208,7 @@ export default function OrbitalChoreScheduler() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {wheels.map(w => (
-          <OrbitalWheel key={w.name} wheel={w} displayWeek={displayWeek} size={240} />
+          <OrbitalWheel key={w.name} wheel={w} weekOffset={baseWeek} size={240} />
         ))}
       </div>
     </div>
