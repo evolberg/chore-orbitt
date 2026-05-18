@@ -165,19 +165,16 @@ export default function OrbitalChoreScheduler() {
             const personChores = assignments[person] || [];
             const primary = personChores[0];
             const color = primary ? choreColor[primary] : "#525252";
-            const isActive = index === activeIndex;
             return (
               <div
                 key={person}
-                className="absolute flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs transition-all"
+                className="absolute flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs"
                 style={{
                   left: x, top: y,
-                  borderColor: isActive ? "#ffffff" : color,
-                  color: isActive ? "#ffffff" : color,
-                  backgroundColor: isActive ? `${color}55` : `${color}22`,
-
-                  transform: isActive ? "translate(-50%, -50%) scale(1.15)" : "translate(-50%, -50%) scale(1)",
-                  zIndex: isActive ? 10 : 1,
+                  borderColor: color,
+                  color: color,
+                  backgroundColor: `${color}22`,
+                  transform: "translate(-50%, -50%)",
                 }}
               >
                 {peopleMap[person]}
